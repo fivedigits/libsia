@@ -5,6 +5,10 @@
 #include <math.h>
 #include <fftw3.h>
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #define SAMPLE_BUFFER_SIZE 1024
 
 #define FRAME_LENGTH 43
@@ -216,15 +220,4 @@ beat_vector* compute_beat_vector(const char * filename) {
 	free(subband_indices);
 
 	return bv;
-}
-
-int main () {
-
-	beat_vector * bv = compute_beat_vector("test.ogg");
-
-	printf("%f\n", bv->beats->data->time);
-
-	free(bv);
-
-	return 0;
 }
