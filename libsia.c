@@ -1,13 +1,8 @@
 #include <stdlib.h>
-#include <assert.h>
-#include <sox.h>
+#include <sndfile.h>
 #include <complex.h>
 #include <math.h>
 #include <fftw3.h>
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 #define SAMPLE_BUFFER_SIZE 1024
 
@@ -87,10 +82,11 @@ int get_length_node(beat_node_t * head) {
 
 beat_vector* compute_beat_vector(const char * filename) {
 
-	static sox_format_t * file;
+	static SNDFILE * file;
+	SF_INFO * sfinfo = malloc(sizeof(SF_INFO));
 	int chans;
 	int frames_read;
-	double rate;
+	int rate;
 
 	fftw_complex mono_samples[SAMPLE_BUFFER_SIZE];
 	fftw_complex freq_samples[SAMPLE_BUFFER_SIZE];
@@ -108,20 +104,20 @@ beat_vector* compute_beat_vector(const char * filename) {
 
 	beat_vector* bv = malloc(sizeof(beat_vector));
 
-	assert(sox_init() == SOX_SUCCESS);
+	sfinfo->format = 0;
 
-	assert(file = sox_open_read(filename, NULL, NULL, NULL));
+	file = sf_open ("test.ogg", SFM_READ, sfinfo);
 
-	chans = file->signal.channels;
-	rate = file->signal.rate;
+	chans = sfinfo->channels;
+	rate = sfinfo->samplerate;
 
-	int chunk_size = SAMPLE_BUFFER_SIZE * file->signal.channels;
+	int chunk_size = SAMPLE_BUFFER_SIZE * chans;
 
-	int insamples[chunk_size];
+	double insamples[chunk_size];
 
 	frames_read = 0;
 
-	while (sox_read(file, insamples, chunk_size) == chunk_size) {
+	while (sf_read_double(file, insamples, chunk_size) == chunk_size) {
 		int i;
 
 		// convert the samples to mono samples
@@ -132,10 +128,10 @@ beat_vector* compute_beat_vector(const char * filename) {
 
 			for (j=0; j < chans; j++) {
 
-				average += insamples[chans*i + j]/chans;
+				average += insamples[chans*i + j]/((double) chans);
 			}
 
-			mono_samples[i] = (double) average * 1./(SOX_SAMPLE_MAX+1.);
+			mono_samples[i] = average;
 		}
 
 
@@ -212,8 +208,7 @@ beat_vector* compute_beat_vector(const char * filename) {
 
 	fftw_destroy_plan(fftplan);
 
-	sox_close(file);
-	sox_quit();
+	sf_close(file);
 
 	current = NULL;
 	free(current);
