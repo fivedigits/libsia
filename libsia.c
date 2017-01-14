@@ -104,6 +104,7 @@ beat_vector* compute_beat_vector(const char * filename) {
 
 	beat_vector* bv = malloc(sizeof(beat_vector));
 
+	// let libsndfile determine the format
 	sfinfo->format = 0;
 
 	file = sf_open ("test.ogg", SFM_READ, sfinfo);
@@ -209,6 +210,7 @@ beat_vector* compute_beat_vector(const char * filename) {
 	fftw_destroy_plan(fftplan);
 
 	sf_close(file);
+	free(sfinfo);
 
 	current = NULL;
 	free(current);

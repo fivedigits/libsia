@@ -1,16 +1,19 @@
 CC = gcc
 
-all: shared static
+all: clean shared example
 
 shared:
-	$(CC) -lsox -lfftw3 -lm -c -fpic libsia.c
+	$(CC) -lsndfile -lfftw3 -c -fpic libsia.c
 	$(CC) -shared -o libsia.so libsia.o
 
 static:
-	$(CC) -lsox -lfftw3 -lm -c libsia.c
+	$(CC) -lsndfile -lfftw3 -c libsia.c
 	ar rs libsia.a libsia.o
+
+example:
+	$(CC) -lportaudio -lsndfile example.c -o example
 
 .PHONY: clean
 
 clean: 
-	rm libsia.a libsia.o libsia.so
+	rm -f libsia.a libsia.o libsia.so example
