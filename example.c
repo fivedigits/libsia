@@ -97,10 +97,10 @@ int main() {
 	rate = sfinfo-> samplerate;	
 	frames = sfinfo->frames;
 
-	soundData->samples = malloc(sizeof(frames * chans));
+	soundData->samples = malloc(sizeof(int) * frames * chans);
 
 	// somehow can't read all frames at once
-	frames = sf_readf_int(file, soundData->samples, 1);
+	frames = sf_readf_int(file, soundData->samples, frames);
 
 	int j;
 
