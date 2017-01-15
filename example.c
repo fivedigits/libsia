@@ -9,7 +9,7 @@ typedef struct sf_data {
 	int length;
 	int channels;
 	int rate;
-	int * samples;
+	float * samples;
 } sf_data_t;
 
 int callback(const void *input,
@@ -20,8 +20,8 @@ int callback(const void *input,
 		void *userData)
 {
 	sf_data_t *data = (sf_data_t *) userData;
-	int *out = (int* ) output;
-	int *cursor;
+	float *out = (float* ) output;
+	float *cursor;
 	int thisSize = frameCount;
 	int thisRead;
 	int i;
@@ -97,16 +97,11 @@ int main() {
 	rate = sfinfo-> samplerate;	
 	frames = sfinfo->frames;
 
-	soundData->samples = malloc(sizeof(int) * frames * chans);
+	soundData->samples = malloc(sizeof(float) * frames * chans);
 
 	// somehow can't read all frames at once
-	frames = sf_readf_int(file, soundData->samples, frames);
+	frames = sf_readf_float(file, soundData->samples, frames);
 
-	int j;
-
-	for (j= 0; j < frames * chans; j++) {
-		printf("%d\n",soundData->samples[j]);
-	}
 	// Done with file I/O
 	sf_close(file);
 	
@@ -124,13 +119,19 @@ int main() {
 
 	outputParameters.device = Pa_GetDefaultOutputDevice();
 
+	if(outputParameters.device == paNoDevice) {
+
+		printf("Couldn't initialize default output device\n");
+		return -1;
+	}
+
 	outputParameters.channelCount = soundData->channels;
 	
-	outputParameters.sampleFormat = paInt32;
+	outputParameters.sampleFormat = paFloat32;
 
-	outputParameters.suggestedLatency = 0.3;
+	outputParameters.hostApiSpecificStreamInfo = NULL;
 
-	outputParameters.hostApiSpecificStreamInfo = 0;
+	outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultHighOutputLatency;
 
 	error = Pa_OpenStream(&stream,
 				0,
@@ -148,7 +149,9 @@ int main() {
 	}
 
 	Pa_StartStream(stream);
-	Pa_Sleep(2000);
+
+	Pa_Sleep(200000);
+
 	Pa_StopStream(stream);
 
 	
