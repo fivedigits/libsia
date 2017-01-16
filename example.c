@@ -70,12 +70,14 @@ int main() {
 	PaError error;
 	PaStreamParameters outputParameters;
 
-	beat_vector * beatV = compute_beat_vector("test.ogg");
+	beat_node_t * beatV = compute_beat_vector("test.ogg");
+
+	while (beatV != NULL) {
+
+		printf("Beat in band %d\n", beatV->data->band);
+		beatV = beatV->next;
+	}
 	
-	double time;
-
-	/*printf("%f\n",beatV->beats->data->time);*/
-
 	sf_data_t * soundData;
 
 	soundData = malloc(sizeof(sf_data_t));
@@ -131,12 +133,6 @@ int main() {
 
 	Pa_StartStream(stream);
 
-	time = 0;
-	/*while (beatV->beats != NULL) {*/
-
-		/*printf("Beat in band %d\n", beatV->beats->data->band);*/
-		/*beatV->beats = beatV->beats->next;*/
-	/*}*/
 	Pa_Sleep(20000);
 
 	Pa_StopStream(stream);

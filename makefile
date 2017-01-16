@@ -3,7 +3,7 @@ CC = gcc
 all: clean static example
 
 static:
-	$(CC) -static -c libsia.c -lsndfile -lfftw3 -lm 
+	$(CC) -static -c libsia.c -lsndfile -lfftw3 -lm -lcomplex
 	ar -cvq libsia.a libsia.o
 
 example:
