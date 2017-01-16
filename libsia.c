@@ -100,9 +100,10 @@ beat_node_t* compute_beat_vector(const char * filename) {
 	int * subband_indices = compute_subbands();
 
 	beat_node_t * head = malloc(sizeof(beat_node_t));
-	beat_node_t * current = NULL;
+	beat_node_t * current = head;
 	
-	head->next = current;
+	current->next = NULL;
+	current->data = NULL;
 
 	// let libsndfile determine the format
 	sfinfo->format = 0;
@@ -175,12 +176,7 @@ beat_node_t* compute_beat_vector(const char * filename) {
 
 				if (energy[i] > SENSITIVITY * avg_energy[i]) {
 					
-					if (current == NULL) {
-
-						current = malloc(sizeof(beat_node_t));
-						current->next = NULL;
-						
-					} else {
+					if( current->data != NULL) {
 						current->next = malloc(sizeof(beat_node_t));
 						current = current->next;
 						current->next = NULL;
