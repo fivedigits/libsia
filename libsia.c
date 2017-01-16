@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <sndfile.h>
-#include <complex.h>
 #include <math.h>
 #include <fftw3.h>
 
@@ -99,8 +98,8 @@ beat_vector* compute_beat_vector(const char * filename) {
 
 	int * subband_indices = compute_subbands();
 
-	beat_node_t * head = NULL;
-	beat_node_t * current = NULL;
+	beat_node_t * head;
+	beat_node_t * current;
 
 	beat_vector* bv = malloc(sizeof(beat_vector));
 
@@ -132,7 +131,8 @@ beat_vector* compute_beat_vector(const char * filename) {
 				average += insamples[chans*i + j]/((double) chans);
 			}
 
-			mono_samples[i] = average;
+			mono_samples[i][0] = average;
+			mono_samples[i][1] = 0;
 		}
 
 
@@ -147,7 +147,7 @@ beat_vector* compute_beat_vector(const char * filename) {
 
 			for (j= subband_indices[i]; j < subband_indices[i+1]; j++) {
 
-				energy[i] += pow(cabs(freq_samples[j]),2)/(subband_indices[i+1] - subband_indices[i] + 1);
+				energy[i] += (pow(freq_samples[j][0],2)+pow(freq_samples[j][1],2))/(subband_indices[i+1] - subband_indices[i] + 1);
 			}
 		}
 
@@ -174,26 +174,26 @@ beat_vector* compute_beat_vector(const char * filename) {
 
 				if (energy[i] > SENSITIVITY * avg_energy[i]) {
 
-					beat * b = malloc(sizeof(beat));
-					
-					b->band = i;
-					b->time = frames_read * SAMPLE_BUFFER_SIZE / rate;
+					if (current == NULL) {
 
-					if (current != NULL) {
-
-						current->next = malloc(sizeof(beat_node_t));
-						current->next->data = b;
-						current->next->next = NULL;
-						current = current->next;
-
+						current = malloc(sizeof(beat_node_t));
+						current->next = NULL;
+						
 					} else {
-
-						head = malloc(sizeof(beat_node_t));
-						head->data = b;
-						head->next = NULL;
-
-						current = head;
+						current->next = malloc(sizeof(beat_node_t));
+						current = current->next;
+						current->next = NULL;
 					}
+
+					if (head == NULL) {
+						head = current;
+					}
+
+					current->data = malloc(sizeof(beat));
+					
+					current->data->band = i;
+					current->data->time = frames_read * SAMPLE_BUFFER_SIZE / rate;
+
 
 				}
 			}
@@ -207,13 +207,12 @@ beat_vector* compute_beat_vector(const char * filename) {
 	bv->beats = head;
 	bv->rate = rate;
 
-	fftw_destroy_plan(fftplan);
+	//fftw_destroy_plan(fftplan); // for some reason, this throws segmentation faults
 
 	sf_close(file);
+
 	free(sfinfo);
 
-	current = NULL;
-	free(current);
 	free(subband_indices);
 
 	return bv;

@@ -7,7 +7,7 @@ static:
 	ar -cvq libsia.a libsia.o
 
 example:
-	$(CC) -o example example.c ./libsia.a -lportaudio -lsndfile -lm -lfftw3
+	$(CC) -g -o example example.c ./libsia.a -lportaudio -lsndfile -lm -lfftw3 -latomic
 
 .PHONY: clean
 

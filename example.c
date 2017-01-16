@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <portaudio.h>
 #include <sndfile.h>
+#include <stdatomic.h>
 #include "libsia.h"
 
 typedef struct sf_data {
@@ -27,8 +28,10 @@ int callback(const void *input,
 
 	cursor = out; 
 
+	
 	while (thisSize > 0) {
 		// if we would read past end of file, don't read as much
+		
 		sf_seek(data->file,data->s_position,SEEK_SET);
 
 		if (thisSize > (data->sfInfo.frames - data->s_position)) {
@@ -40,10 +43,10 @@ int callback(const void *input,
 
 			thisRead = thisSize;
 
-			data->s_position += thisRead;
+			data->s_position=data->s_position + thisRead;
 		}
 
-		data->f_position = data->s_position /data->sfInfo.channels;
+		data->f_position=data->s_position /data->sfInfo.channels;
 
 		// copy thisRead frames from input to output
 
@@ -66,6 +69,12 @@ int main() {
 	PaStream *stream;
 	PaError error;
 	PaStreamParameters outputParameters;
+
+	beat_vector * beatV = compute_beat_vector("test.ogg");
+	
+	double time;
+
+	/*printf("%f\n",beatV->beats->data->time);*/
 
 	sf_data_t * soundData;
 
@@ -122,6 +131,12 @@ int main() {
 
 	Pa_StartStream(stream);
 
+	time = 0;
+	/*while (beatV->beats != NULL) {*/
+
+		/*printf("Beat in band %d\n", beatV->beats->data->band);*/
+		/*beatV->beats = beatV->beats->next;*/
+	/*}*/
 	Pa_Sleep(20000);
 
 	Pa_StopStream(stream);
