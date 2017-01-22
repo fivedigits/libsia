@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <portaudio.h>
 #include <sndfile.h>
-#include <stdatomic.h>
 #include "libsia.h"
 
 typedef struct sf_data {
@@ -70,14 +69,10 @@ int main() {
 	PaError error;
 	PaStreamParameters outputParameters;
 
+	PaTime start_time;
+
 	beat_node_t * beatV = compute_beat_vector("test.ogg");
 
-	while (beatV != NULL) {
-
-		printf("Beat in band %d\n", beatV->data->band);
-		beatV = beatV->next;
-	}
-	
 	sf_data_t * soundData;
 
 	soundData = malloc(sizeof(sf_data_t));
@@ -132,6 +127,21 @@ int main() {
 	}
 
 	Pa_StartStream(stream);
+
+	start_time = Pa_GetStreamTime(stream);
+
+	while (1) {
+
+		while ((beatV != NULL) && (beatV->data->time <= Pa_GetStreamTime(stream) - start_time)) {
+
+			printf("Beat in band %d\n", beatV->data->band);
+			beatV = beatV->next;
+		}
+
+		Pa_Sleep(0.01);
+	}
+
+	printf("%f\n", Pa_GetStreamTime(stream));
 
 	Pa_Sleep(20000);
 
